@@ -87,7 +87,9 @@ class modunauthorizedproductdiscount extends DolibarrModules
 		//							'dir' => array('output' => 'othermodulename'),      // To force the default directories names
 		//							'workflow' => array('WORKFLOW_MODULE1_YOURACTIONTYPE_MODULE2'=>array('enabled'=>'! empty($conf->module1->enabled) && ! empty($conf->module2->enabled)', 'picto'=>'yourpicto@unauthorizedproductdiscount')) // Set here all workflow context managed by module
 		//                        );
-		$this->module_parts = array();
+		$this->module_parts = array(
+										'triggers'=>1
+									);
 
 		// Data directories to create when module is enabled.
 		// Example: this->dirs = array("/unauthorizedproductdiscount/temp");
@@ -246,13 +248,19 @@ class modunauthorizedproductdiscount extends DolibarrModules
 	 */
 	function init($options='')
 	{
+		global $db;
+		
 		$sql = array();
 		
 		define('INC_FROM_DOLIBARR',true);
-
+		
+		require_once DOL_DOCUMENT_ROOT . '/core/class/extrafields.class.php';
 		dol_include_once('/unauthorizedproductdiscount/config.php');
 		dol_include_once('/unauthorizedproductdiscount/script/create-maj-base.php');
 
+		$e = new ExtraFields($db);
+		$e->addExtraField('remise_interdite', 'Remise interdite', 'boolean', $pos, $size, 'product');
+		
 		$result=$this->_load_tables('/unauthorizedproductdiscount/sql/');
 
 		return $this->_init($sql, $options);
