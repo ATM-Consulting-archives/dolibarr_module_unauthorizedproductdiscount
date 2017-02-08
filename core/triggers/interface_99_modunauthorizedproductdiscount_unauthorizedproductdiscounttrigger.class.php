@@ -157,7 +157,7 @@ class Interfaceunauthorizedproductdiscounttrigger
         } elseif($action === 'LINEBILL_INSERT' || $action === 'LINEBILL_UPDATE') {
         	
 			if(!empty($conf->global->UNAUTHORIZED_PROD_DISCOUNT_ON_BILL)) {
-				$o->updateline($object->rowid, $object->desc, ($object->subprice > $product->price) ? $object->subprice : $product->price, $object->qty, 0, '', '', $product->tva_tx, 0, 0, 'HT', 0, $object->product_type, 0, 0, $object->fk_fournprice, $object->pa_ht, $object->label);
+				$o->updateline($object->rowid, $object->desc, ($object->subprice > $product->price) ? $object->subprice : $product->price, $object->qty, 0, '', '', $product->tva_tx, 0, 0, 'HT', 0, $object->product_type, 0, 0, $object->fk_fournprice, $object->pa_ht, $object->label, 0, 0, 100);
 				$msg=true;
 			}
 			
