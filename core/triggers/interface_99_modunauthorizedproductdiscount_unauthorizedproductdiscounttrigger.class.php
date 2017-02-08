@@ -116,24 +116,30 @@ class Interfaceunauthorizedproductdiscounttrigger
     	global $db, $conf;
 
 		// Ce trigger ne doit être déclenché que si l'on est sur du addline ou updateline des éléments en conf
-		if(!in_array($action, array('LINEPROPAL_INSERT', 'LINEPROPAL_UPDATE', 'LINEBILL_INSERT', 'LINEBILL_UPDATE')) && empty($object->fk_product)) return 0;
+		if(!in_array($action, array('LINEPROPAL_INSERT', 'LINEPROPAL_UPDATE', 'LINEBILL_INSERT', 'LINEBILL_UPDATE', 'LINEORDER_INSERT', 'LINEORDER_UPDATE')) || empty($object->fk_product)) return 0;
         
 		define('INC_FROM_DOLIBARR', true);
 		require_once DOL_DOCUMENT_ROOT . '/product/class/product.class.php';
-		require_once DOL_DOCUMENT_ROOT . '/comm/propal/class/propal.class.php';
 		
 		// Chargement du produit
 		$product = new Product($db);
 		$product->fetch($object->fk_product);
-		if(empty($product->array_options['options_remise_interdite'])) return 0;
+		if(empty($product->array_options['options_remise_interdite'])
+			|| (empty($object->remise_percent) && $object->subprice >= $product->price)) return 0;
 		
 		// Chargement de l'objet parent (propal, cmd ou facture)
 		if(get_class($object) === 'PropaleLigne') {
+			require_once DOL_DOCUMENT_ROOT . '/comm/propal/class/propal.class.php';
 			$o = new Propal($db);
 			$o->fetch($object->fk_propal);
 		} elseif(get_class($object) === 'FactureLigne') {
+			require_once DOL_DOCUMENT_ROOT . '/compta/facture/class/facture.class.php';
 			$o = new Facture($db);
 			$o->fetch($object->fk_facture);
+		} elseif(get_class($object) === 'OrderLine') {
+			require_once DOL_DOCUMENT_ROOT . '/commande/class/commande.class.php';
+			$o = new Commande($db);
+			$o->fetch($object->fk_commande);
 		}
 		
 		// On vide le trigger du module pour ne pas faire de boucle infinie (impossible de passer un notrigger à la fonction updateline, on ne peut la passer qu'à la fonction update de l'objet line)
@@ -152,6 +158,13 @@ class Interfaceunauthorizedproductdiscounttrigger
         	
 			if(!empty($conf->global->UNAUTHORIZED_PROD_DISCOUNT_ON_PROPAL)) {
 				$o->updateline($object->rowid, $object->desc, ($object->subprice > $product->price) ? $object->subprice : $product->price, $object->qty, 0, '', '', $product->tva_tx, 0, 0, 'HT', 0, $object->product_type, 0, 0, $object->fk_fournprice, $object->pa_ht, $object->label);
+				$msg=true;
+			}
+			
+        } elseif($action === 'LINEORDER_INSERT' || $action === 'LINEORDER_UPDATE') {
+        	
+			if(!empty($conf->global->UNAUTHORIZED_PROD_DISCOUNT_ON_PROPAL)) {
+				$o->updateline($object->rowid, $object->desc, ($object->subprice > $product->price) ? $object->subprice : $product->price, $object->qty, 0, $product->tva_tx, 0, 0, 'HT', 0, '', '', $object->product_type, 0, 0, $object->fk_fournprice, $object->pa_ht, $object->label);
 				$msg=true;
 			}
 			
