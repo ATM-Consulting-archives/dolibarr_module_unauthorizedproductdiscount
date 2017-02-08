@@ -156,14 +156,14 @@ class Interfaceunauthorizedproductdiscounttrigger
 			
         } elseif($action === 'LINEBILL_INSERT' || $action === 'LINEBILL_UPDATE') {
         	
-			if(!empty($conf->global->UNAUTHORIZED_PROD_DISCOUNT_ON_PROPAL)) {
+			if(!empty($conf->global->UNAUTHORIZED_PROD_DISCOUNT_ON_BILL)) {
 				$o->updateline($object->rowid, $object->desc, ($object->subprice > $product->price) ? $object->subprice : $product->price, $object->qty, 0, '', '', $product->tva_tx, 0, 0, 'HT', 0, $object->product_type, 0, 0, $object->fk_fournprice, $object->pa_ht, $object->label);
 				$msg=true;
 			}
 			
         } elseif($action === 'LINEORDER_INSERT' || $action === 'LINEORDER_UPDATE') {
         	
-			if(!empty($conf->global->UNAUTHORIZED_PROD_DISCOUNT_ON_PROPAL)) {
+			if(!empty($conf->global->UNAUTHORIZED_PROD_DISCOUNT_ON_ORDER)) {
 				$o->updateline($object->rowid, $object->desc, ($object->subprice > $product->price) ? $object->subprice : $product->price, $object->qty, 0, $product->tva_tx, 0, 0, 'HT', 0, '', '', $object->product_type, 0, 0, $object->fk_fournprice, $object->pa_ht, $object->label);
 				$msg=true;
 			}

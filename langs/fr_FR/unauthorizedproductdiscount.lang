@@ -5,3 +5,6 @@ ATMAbout = Ce module a été développé par <a href="http://www.atm-consulting.
 
 unauthorizedproductdiscountSetup = Configuration du module unauthorizedproductdiscount
 unauthorizedproductdiscountAbout = A propos du module unauthorizedproductdiscount
+UNAUTHORIZED_PROD_DISCOUNT_ON_ORDER=Réajuster les prix de ventes des produits sans remises sur les commandes
+UNAUTHORIZED_PROD_DISCOUNT_ON_PROPAL=Réajuster les prix de ventes des produits sans remises sur les propositions
+UNAUTHORIZED_PROD_DISCOUNT_ON_BILL=Réajuster les prix de ventes des produits sans remises sur les factures
