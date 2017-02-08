@@ -116,7 +116,7 @@ class Interfaceunauthorizedproductdiscounttrigger
     	global $db, $conf;
 
 		// Ce trigger ne doit être déclenché que si l'on est sur du addline ou updateline des éléments en conf
-		if(!in_array($action, array('LINEPROPAL_INSERT', 'LINEPROPAL_UPDATE')) && empty($object->fk_product)) return 0;
+		if(!in_array($action, array('LINEPROPAL_INSERT', 'LINEPROPAL_UPDATE', 'LINEBILL_INSERT', 'LINEBILL_UPDATE')) && empty($object->fk_product)) return 0;
         
 		define('INC_FROM_DOLIBARR', true);
 		require_once DOL_DOCUMENT_ROOT . '/product/class/product.class.php';
@@ -131,17 +131,33 @@ class Interfaceunauthorizedproductdiscounttrigger
 		if(get_class($object) === 'PropaleLigne') {
 			$o = new Propal($db);
 			$o->fetch($object->fk_propal);
-		} /*elseif(get_class($object) === 'PropaleLigne') {
-			
-		}*/
+		} elseif(get_class($object) === 'FactureLigne') {
+			$o = new Facture($db);
+			$o->fetch($object->fk_facture);
+		}
+		
+		// On vide le trigger du module pour ne pas faire de boucle infinie (impossible de passer un notrigger à la fonction updateline, on ne peut la passer qu'à la fonction update de l'objet line)
+		$conf->modules_parts['triggers']['unauthorizedproductdiscount'] = '';
+		
+		$msg = false;
 		
         if ($action === 'LINEPROPAL_INSERT' || $action === 'LINEPROPAL_UPDATE') {
+        	
 			if(!empty($conf->global->UNAUTHORIZED_PROD_DISCOUNT_ON_PROPAL)) {
-				$conf->modules_parts['triggers']['unauthorizedproductdiscount'] = '';
 				$o->updateline($object->rowid, ($object->subprice > $product->price) ? $object->subprice : $product->price, $object->qty, 0, $product->tva_tx, 0, 0, $object->desc, 'HT', 0, 0, 0, 0, 0, $object->pa_ht, '', $object->product_type);
-				setEventMessage('Prix ajusté car remise non autorisée', 'warnings');
+				$msg=true;
 			}
+			
+        } elseif($action === 'LINEBILL_INSERT' || $action === 'LINEBILL_UPDATE') {
+        	
+			if(!empty($conf->global->UNAUTHORIZED_PROD_DISCOUNT_ON_PROPAL)) {
+				$o->updateline($object->rowid, $object->desc, ($object->subprice > $product->price) ? $object->subprice : $product->price, $object->qty, 0, '', '', $product->tva_tx, 0, 0, 'HT', 0, $object->product_type, 0, 0, $object->fk_fournprice, $object->pa_ht, $object->label);
+				$msg=true;
+			}
+			
         }
+		
+		if($msg) setEventMessage('Prix ajusté car remise non autorisée', 'warnings');
 		
         dol_syslog(
             "Trigger '" . $this->name . "' for action '$action' launched by " . __FILE__ . ". id=" . $object->id
